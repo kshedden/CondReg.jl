@@ -1,0 +1,4 @@
+name = "CondReg"
+uuid = "a9401738-f8ea-491d-94e5-aec37c5a8625"
+authors = ["Kerby Shedden <kshedden@umich.edu>"]
+version = "0.1.0"
