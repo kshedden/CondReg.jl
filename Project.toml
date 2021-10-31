@@ -2,3 +2,10 @@ name = "CondReg"
 uuid = "a9401738-f8ea-491d-94e5-aec37c5a8625"
 authors = ["Kerby Shedden <kshedden@umich.edu>"]
 version = "0.1.0"
+
+[deps]
+FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
+GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"

@@ -113,8 +113,8 @@ function _fit!(
         score(m, x, g)
         return g
     end
-    hess = jacobian(central_fdm(5, 1), score1, b)[1]
-    hess .*= -1
+    hess = jacobian(central_fdm(12, 1), score1, b)[1]
+	hess = Symmetric(-(hess + hess') ./ 2)
     m.pp.cov = inv(hess)
 
     return m
