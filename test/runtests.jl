@@ -1,10 +1,10 @@
-using CondReg, Test, Random, LinearAlgebra
+using CondReg, Test, LinearAlgebra, StableRNGs
 
 function gen_simple(n::Int)
 
-    Random.seed!(123)
+	rng = StableRNG(123)
 
-    X = randn(n, 3)
+    X = randn(rng, n, 3)
 
     g = zeros(Int, n)
     for i = 1:n
@@ -13,11 +13,10 @@ function gen_simple(n::Int)
 
     lp = X[:, 1] - X[:, 3]
     mn = 1 ./ (1 .+ exp.(-lp))
-    y = [rand() < mn[i] ? 1 : 0 for i = 1:n]
+    y = [rand(rng) < mn[i] ? 1 : 0 for i = 1:n]
 
     return y, X, g
 end
-
 
 @testset "numgrad" begin
 
@@ -48,15 +47,22 @@ end
 	# Test log-likelihood
     pa = [1.0, 0.0, -1.0]
     m = fit(ConditionalLogitModel, X, y, g, dofit = false)
-	@test isapprox(loglike(m, pa), -470.74749, atol=1e-4, rtol=1e-4)
+	@test isapprox(loglike(m, pa), -448.9648679975831, atol=1e-4, rtol=1e-4)
 
 	# Test score
     gr = zeros(3)
     score(m, pa, gr)
-    @test isapprox(gr, [-25.91228169, -13.18333921, -0.35274937], atol=1e-4, rtol=1e-4)
+    @test isapprox(gr, [-13.642599916175753, -9.580236049456111, -13.720581704575254],
+                   atol=1e-4, rtol=1e-4)
 
     r = fit(ConditionalLogitModel, X, y, g)
-	@test isapprox(coef(r), [0.814469, -0.0731922, -0.95152], atol=1e-4, rtol=1e-4)
+	@test isapprox(coef(r), [0.9205497138848794, -0.05772870577778407, -1.0788357395092034],
+	               atol=1e-4, rtol=1e-4)
+
 	se = sqrt.(diag(vcov(r)))
-	@test isapprox(se, [0.0816031, 0.0733603, 0.090174], atol=1e-4, rtol=1e-4)
+	@test isapprox(se, [0.09002707019324953, 0.07615874517091309, 0.09285127671105863],
+				   atol=1e-4, rtol=1e-4)
+
+    score(m, coef(r), gr)
+	@test isapprox(gr, Float64[0, 0, 0], atol=1e-8, rtol=1e-8)
 end

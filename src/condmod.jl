@@ -12,6 +12,9 @@ struct ConditionalLogitModel{R<:Integer,S<:Integer} <: AbstractConditionalModel
     "`ys`: sum of y within each group"
     ys::Vector{S}
 
+	"`wts`: weights (per-group not per-observation)"
+	wts::Vector{Float64}
+
     "`g`: group indicators, must be integers 1, 2, ... and sorted"
     g::Vector{R}
 
@@ -42,7 +45,8 @@ end
 function ConditionalLogitModel(
     X::Matrix{R},
     y::Vector{S},
-    g::Vector{T},
+    g::Vector{T};
+    wts::Vector{R} = zeros(0)
 ) where {R<:Real,S<:Integer,T<:Integer}
 
     (gix, mg) = groupix(g)
@@ -60,7 +64,7 @@ function ConditionalLogitModel(
 
     pp = DensePred(X, Xty)
 
-    return ConditionalLogitModel(y, pp, ys, g, gix, ngrp)
+    return ConditionalLogitModel(y, pp, ys, wts, g, gix, ngrp)
 end
 
 function DensePred(X::Matrix{T}, Xty::Matrix{T}) where {T<:Real}
@@ -76,7 +80,6 @@ function _fit!(
     rtol::Float64,
     start,
 )
-
     X = m.pp.X
     p = size(X)[2]
 
@@ -166,6 +169,7 @@ function loglike(m::ConditionalLogitModel, params)::Float64
     X = m.pp.X
     Xty = m.pp.Xty
     exb = exp.(X * params)
+	wts = m.wts
 
     ll = 0.0
     for g = 1:m.ngrp
@@ -174,10 +178,12 @@ function loglike(m::ConditionalLogitModel, params)::Float64
         # same arguments, so we memoize the results.
         memo = Dict{Tuple{Int64,Int64},Float64}()
 
+		w = length(wts) > 0 ? wts[g] : 1.0
+
         i1, i2 = m.gix[1, g], m.gix[2, g]
-        ll += dot(Xty[g, :], params)
+        ll += w * dot(Xty[g, :], params)
         denom = dh(i2 - i1 + 1, m.ys[g], exb[i1:i2], memo)
-        ll -= log(denom)
+        ll -= w * log(denom)
     end
 
     return ll
@@ -188,6 +194,7 @@ function score(m::ConditionalLogitModel, params, scr)
     X = m.pp.X
     Xty = m.pp.Xty
     exb = exp.(X * params)
+	wts = m.wts
 
     p = size(X)[2]
     @assert length(scr) == p
@@ -199,9 +206,11 @@ function score(m::ConditionalLogitModel, params, scr)
         # same arguments, so memoize the results.
         memo = Dict{Tuple{Int64,Int64},Tuple{Float64,Vector{Float64}}}()
 
+		w = length(wts) > 0 ? wts[g] : 1.0
+
         i1, i2 = m.gix[1, g], m.gix[2, g]
         d, h = ds(i2 - i1 + 1, m.ys[g], p, X[i1:i2, :], exb[i1:i2], memo)
-        scr .+= Xty[g, :] - h ./ d
+        scr .+= w * Xty[g, :] - h ./ d
     end
 end
 
