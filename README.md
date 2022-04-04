@@ -1,4 +1,4 @@
-## Overview
+# Overview
 
 CondReg.jl: Conditional logistic regression in Julia
 --
