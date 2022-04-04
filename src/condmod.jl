@@ -1,8 +1,8 @@
-using LinearAlgebra, Optim, FiniteDifferences, Distributions
+using LinearAlgebra, Optim, FiniteDifferences, Distributions, Missings
 
 abstract type AbstractConditionalModel <: LinPredModel end
 
-struct ConditionalLogitModel{R<:Integer,S<:Integer} <: AbstractConditionalModel
+struct ConditionalLogitModel{S<:Integer,T<:Real} <: AbstractConditionalModel
 
     "`y`: response vector"
     y::Vector{S}
@@ -12,11 +12,11 @@ struct ConditionalLogitModel{R<:Integer,S<:Integer} <: AbstractConditionalModel
     "`ys`: sum of y within each group"
     ys::Vector{S}
 
-	"`wts`: weights (per-group not per-observation)"
-	wts::Vector{Float64}
+    "`wts`: weights (per-group not per-observation)"
+    wts::Vector{T}
 
-    "`g`: group indicators, must be integers 1, 2, ... and sorted"
-    g::Vector{R}
+    "`g`: group indicators, must be sorted"
+    g::AbstractVector
 
     "`gix`: each column contains the first and last index of a group"
     gix::Matrix{Int}
@@ -43,13 +43,18 @@ end
 
 
 function ConditionalLogitModel(
-    X::Matrix{R},
-    y::Vector{S},
-    g::Vector{T};
-    wts::Vector{R} = zeros(0)
-) where {R<:Real,S<:Integer,T<:Integer}
+    X::AbstractMatrix,
+    y::AbstractVector,
+    g::AbstractVector;
+    wts::AbstractVector = zeros(0),
+)
+    g = try
+        disallowmissing(g)
+    catch MethodError
+        error("Missing values not allowed in group variable")
+    end
 
-    (gix, mg) = groupix(g)
+    gix, mg = groupix(g)
     ngrp = size(gix, 2)
 
     # Sufficient statistics, y' 1 and y' X for each greoup
@@ -58,6 +63,9 @@ function ConditionalLogitModel(
     ys = zeros(eltype(y), ngrp)
     for i = 1:ngrp
         i1, i2 = gix[1, i], gix[2, i]
+        if var(y[i1:i2]) < 1e-8
+            @warn "The response appears to be constant in the $(i)th group."
+        end
         ys[i] = sum(y[i1:i2])
         Xty[i, :] = y[i1:i2]' * X[i1:i2, :]
     end
@@ -82,6 +90,11 @@ function _fit!(
 )
     X = m.pp.X
     p = size(X)[2]
+
+    u, _, _ = svd(X)
+    if isapprox(norm(sum(u, dims = 1)), sqrt(size(X, 1)), atol = 1e-8)
+        @warn("Conditional logit models should not contain an intercept.")
+    end
 
     # Wrap the log-likelihood and score functions
     # for minimization.
@@ -117,23 +130,39 @@ function _fit!(
         return g
     end
     hess = jacobian(central_fdm(12, 1), score1, b)[1]
-	hess = Symmetric(-(hess + hess') ./ 2)
+    hess = Symmetric(-(hess + hess') ./ 2)
     m.pp.cov = inv(hess)
 
     return m
 end
 
+"""
+	fit(ConditionalLogitModel, X, y, g; <keyword arguments>)
+
+Fit a conditional logistic regression model to the response vector `y`
+given the covariates in the columns of `X`.  Individuals belong to groups 
+as given in `g`.  The values in `g` must be sorted.
+
+# Keyword Arguments
+- `dofit::Bool`: If true, fit the model, otherwise return an unfit model.
+"""
 function fit(
     ::Type{M},
-    X::Matrix{T},
-    y::AbstractVector{R},
-    g::AbstractVector{S};
+    X::Matrix,
+    y::AbstractVector,
+    g::AbstractVector;
     dofit::Bool = true,
     fitargs...,
-) where {M<:ConditionalLogitModel,T<:Real,R<:Integer,S<:Integer}
+) where {M<:ConditionalLogitModel}
 
     if !(size(X, 1) == size(y, 1) == size(g, 1))
         throw(DimensionMismatch("Number of rows in X, y and g must match"))
+    end
+
+    y = try
+        Int64.(y)
+    catch InexactError
+        throw(InexactError("Response values must be integers"))
     end
 
     c = ConditionalLogitModel(X, y, g)
@@ -141,7 +170,7 @@ function fit(
     return dofit ? fit!(c; fitargs...) : c
 end
 
-function groupix(g::AbstractVector)::Tuple{Array{Int,2},Int}
+function groupix(g::AbstractVector)::Tuple{Matrix{Int},Int}
 
     if !issorted(g)
         error("Group vector is not sorted")
@@ -169,7 +198,7 @@ function loglike(m::ConditionalLogitModel, params)::Float64
     X = m.pp.X
     Xty = m.pp.Xty
     exb = exp.(X * params)
-	wts = m.wts
+    wts = m.wts
 
     ll = 0.0
     for g = 1:m.ngrp
@@ -178,7 +207,7 @@ function loglike(m::ConditionalLogitModel, params)::Float64
         # same arguments, so we memoize the results.
         memo = Dict{Tuple{Int64,Int64},Float64}()
 
-		w = length(wts) > 0 ? wts[g] : 1.0
+        w = length(wts) > 0 ? wts[g] : 1.0
 
         i1, i2 = m.gix[1, g], m.gix[2, g]
         ll += w * dot(Xty[g, :], params)
@@ -194,7 +223,7 @@ function score(m::ConditionalLogitModel, params, scr)
     X = m.pp.X
     Xty = m.pp.Xty
     exb = exp.(X * params)
-	wts = m.wts
+    wts = m.wts
 
     p = size(X)[2]
     @assert length(scr) == p
@@ -206,7 +235,7 @@ function score(m::ConditionalLogitModel, params, scr)
         # same arguments, so memoize the results.
         memo = Dict{Tuple{Int64,Int64},Tuple{Float64,Vector{Float64}}}()
 
-		w = length(wts) > 0 ? wts[g] : 1.0
+        w = length(wts) > 0 ? wts[g] : 1.0
 
         i1, i2 = m.gix[1, g], m.gix[2, g]
         d, h = ds(i2 - i1 + 1, m.ys[g], p, X[i1:i2, :], exb[i1:i2], memo)
@@ -303,3 +332,5 @@ function StatsBase.fit!(
 )
     _fit!(m, verbose, maxiter, atol, rtol, start)
 end
+
+clogit(F, D, args...; kwargs...) = fit(ConditionalLogitModel, F, D, args...; kwargs...)

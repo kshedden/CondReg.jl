@@ -5,7 +5,7 @@ using GLM: LinPredModel, LinPred
 
 import StatsBase: coef, coeftable, vcov, stderr, fit
 
-export fit, fit!, ConditionalModel, ConditionalLogitModel, loglike, score
+export fit, fit!, ConditionalModel, ConditionalLogitModel, clogit, loglike, score
 export coef, stderr, vcov
 
 include("condmod.jl")
