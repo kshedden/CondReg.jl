@@ -1,6 +1,6 @@
 #=
 Fit conditional logistic regression models to two datasets discussed
-in the Stata documentation, available at
+in the Stata documentation.  The documentation is available at
 
 stata.com/manuals/rclogit.pdf.
 
