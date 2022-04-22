@@ -32,6 +32,10 @@ function fit(
         throw(DimensionMismatch(msg))
     end
 
+	if (length(offset) > 0) && (length(offset) != length(y))
+		throw(DimensionMismatch("If offset is provided its length must equal the length of y."))
+	end
+
     y = try
         Int64.(y)
     catch InexactError

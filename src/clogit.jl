@@ -13,6 +13,7 @@ given the covariates in the columns of `X`.  Individuals belong to groups
 as given in `g`.  The values in `g` must be sorted.
 
 # Keyword Arguments
+- `offset::Vector`: If present, an offset that is added to the linear predictor.
 - `dofit::Bool`: If true, fit the model, otherwise return an unfit model.
 """
 function fit(
@@ -26,7 +27,9 @@ function fit(
 ) where {M<:ConditionalLogitModel}
 
     if !(size(X, 1) == length(y) == length(g))
-        throw(DimensionMismatch("Number of rows in X, y and g must match"))
+		n1, n2, n3 = size(X, 1), length(y), length(g)
+		msg = @sprintf("Number of rows in X (%d), y (%d), and g (%d) must match.", n1, n2, n3)
+        throw(DimensionMismatch(msg))
     end
 
 	if (length(offset) > 0) && (length(offset) != length(y))
