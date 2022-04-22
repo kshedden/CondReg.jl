@@ -20,6 +20,7 @@ function fit(
     X::Matrix,
     y::AbstractVector,
     g::AbstractVector;
+	offset = zeros(0),
     dofit::Bool = true,
     fitargs...,
 ) where {M<:ConditionalLogitModel}
@@ -28,13 +29,17 @@ function fit(
         throw(DimensionMismatch("Number of rows in X, y and g must match"))
     end
 
+	if (length(offset) > 0) && (length(offset) != length(y))
+		throw(DimensionMismatch("If offset is provided its length must equal the length of y."))
+	end
+
     y = try
         Int64.(y)
     catch InexactError
         throw(InexactError("Response values must be integers"))
     end
 
-    c = ConditionalLogitModel(ConditionalModel(X, y, g))
+    c = ConditionalLogitModel(ConditionalModel(X, y, g; offset=offset))
     return dofit ? fit!(c; fitargs...) : c
 end
 
@@ -43,7 +48,11 @@ function loglike(m::ConditionalLogitModel, params)::Float64
     cm = m.cm
     X = cm.pp.X
     Xty = cm.pp.Xty
-    exb = exp.(X * params)
+    linpred = X * params
+    if length(cm.offset) > 0
+		linpred .+= cm.offset
+    end
+    exb = exp.(linpred)
     wts = cm.wts
 
     ll = 0.0
@@ -69,7 +78,11 @@ function score(m::ConditionalLogitModel, params, scr)
     cm = m.cm
     X = cm.pp.X
     Xty = cm.pp.Xty
-    exb = exp.(X * params)
+    linpred = X * params
+    if length(cm.offset) > 0
+		linpred .+= cm.offset
+    end
+    exb = exp.(linpred)
     wts = cm.wts
 
     p = size(X)[2]

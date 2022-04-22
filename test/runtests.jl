@@ -41,47 +41,54 @@ end
     f = @formula(y ~ x1 + x2 + x3)
     m = cpoisson(f, df, g)
     @test length(coefnames(m)) == 3
-    println(coefnames(m))
 end
 
 @testset "numgrad clogit" begin
 
     y, X, g = gen_simple_clogit(1000)
-    c = fit(ConditionalLogitModel, X, y, g; dofit = false)
 
-    x = Float64[1, 0, -1]
-    agrad = zeros(3)
-    score(c, x, agrad)
+    for include_offset in [false, true]
+		args = include_offset ? [:offset=>randn(length(y))] : []
+	    c = fit(ConditionalLogitModel, X, y, g; dofit = false, args...)
 
-    # Check the gradient
-    ngrad = grad(central_fdm(5, 1), y -> loglike(c, y), x)[1]
-    @test isapprox(agrad, ngrad, atol = 1e-4, rtol = 1e-3)
+	    x = Float64[1, 0, -1]
+    	agrad = zeros(3)
+    	score(c, x, agrad)
+
+	    # Check the gradient
+   	 	ngrad = grad(central_fdm(5, 1), y -> loglike(c, y), x)[1]
+    	@test isapprox(agrad, ngrad, atol = 1e-4, rtol = 1e-3)
+	end
 end
 
 @testset "numgrad cpoisson" begin
 
     y, X, g = gen_simple_cpoisson(1000)
-    c = fit(ConditionalPoissonModel, X, y, g; dofit = false)
 
-    x = Float64[1, 0, -1]
-    agrad = zeros(3)
-    score(c, x, agrad)
+    for include_offset in [false, true]
+		args = include_offset ? [:offset=>randn(length(y))] : []
+	    c = fit(ConditionalPoissonModel, X, y, g; dofit = false, args...)
 
-    # Check the gradient
-    ngrad = grad(central_fdm(5, 1), y -> loglike(c, y), x)[1]
-    @test isapprox(agrad, ngrad, atol = 1e-4, rtol = 1e-3)
+	    x = Float64[1, 0, -1]
+    	agrad = zeros(3)
+    	score(c, x, agrad)
 
-    # Check the Hessian
-    score1 = function (x)
-        g = zeros(length(x))
-        score(c, x, g)
-        return g
-    end
-    nhess = jacobian(central_fdm(12, 1), score1, x)[1]
-    nhess = (nhess + nhess') ./ 2
-    ahess = zeros(size(nhess)...)
-    hessian(c, x, ahess)
-    @test isapprox(ahess, nhess)
+	    # Check the gradient
+    	ngrad = grad(central_fdm(5, 1), y -> loglike(c, y), x)[1]
+    	@test isapprox(agrad, ngrad, atol = 1e-4, rtol = 1e-3)
+
+	    # Check the analytic Hessian
+   	    score1 = function (x)
+        	gr = zeros(length(x))
+        	score(c, x, gr)
+        	return gr
+    	end
+    	nhess = jacobian(central_fdm(12, 1), score1, x)[1]
+    	nhess = (nhess + nhess') ./ 2
+    	ahess = zeros(size(nhess)...)
+    	hessian(c, x, ahess)
+    	@test isapprox(ahess, nhess)
+	end
 end
 
 @testset "Simple clogit fit" begin
@@ -123,7 +130,7 @@ end
     @test isapprox(gr, Float64[0, 0, 0], atol = 1e-8, rtol = 1e-8)
 end
 
-@testset "Simple cpoison fit" begin
+@testset "Simple cpoisson fit" begin
 
     y, X, g = gen_simple_cpoisson(1000)
 
