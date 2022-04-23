@@ -6,7 +6,7 @@ coef(m::ConditionalLogitModel) = coef(m.cm)
 vcov(m::ConditionalLogitModel) = vcov(m.cm)
 
 """
-	fit(ConditionalLogitModel, X, y, g; <keyword arguments>)
+    fit(ConditionalLogitModel, X, y, g; <keyword arguments>)
 
 Fit a conditional logistic regression model to the response vector `y`
 given the covariates in the columns of `X`.  Individuals belong to groups
@@ -21,20 +21,20 @@ function fit(
     X::Matrix,
     y::AbstractVector,
     g::AbstractVector;
-	offset = zeros(0),
+    offset = zeros(0),
     dofit::Bool = true,
     fitargs...,
 ) where {M<:ConditionalLogitModel}
 
     if !(size(X, 1) == length(y) == length(g))
-		n1, n2, n3 = size(X, 1), length(y), length(g)
-		msg = @sprintf("Number of rows in X (%d), y (%d), and g (%d) must match.", n1, n2, n3)
+        n1, n2, n3 = size(X, 1), length(y), length(g)
+        msg = @sprintf("Number of rows in X (%d), y (%d), and g (%d) must match.", n1, n2, n3)
         throw(DimensionMismatch(msg))
     end
 
-	if (length(offset) > 0) && (length(offset) != length(y))
-		throw(DimensionMismatch("If offset is provided its length must equal the length of y."))
-	end
+    if (length(offset) > 0) && (length(offset) != length(y))
+        throw(DimensionMismatch("If offset is provided its length must equal the length of y."))
+    end
 
     y = try
         Int64.(y)
@@ -53,7 +53,7 @@ function loglike(m::ConditionalLogitModel, params)::Float64
     Xty = cm.pp.Xty
     linpred = X * params
     if length(cm.offset) > 0
-		linpred .+= cm.offset
+        linpred .+= cm.offset
     end
     exb = exp.(linpred)
     wts = cm.wts
@@ -83,7 +83,7 @@ function score(m::ConditionalLogitModel, params, scr)
     Xty = cm.pp.Xty
     linpred = X * params
     if length(cm.offset) > 0
-		linpred .+= cm.offset
+        linpred .+= cm.offset
     end
     exb = exp.(linpred)
     wts = cm.wts

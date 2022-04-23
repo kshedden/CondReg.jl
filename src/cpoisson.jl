@@ -6,7 +6,7 @@ coef(m::ConditionalPoissonModel) = coef(m.cm)
 vcov(m::ConditionalPoissonModel) = vcov(m.cm)
 
 """
-	fit(ConditionalPoissonModel, X, y, g; <keyword arguments>)
+    fit(ConditionalPoissonModel, X, y, g; <keyword arguments>)
 
 Fit a conditional Poisson regression model to the response vector `y`
 given the covariates in the columns of `X`.  Individuals belong to groups
@@ -21,20 +21,20 @@ function fit(
     X::Matrix,
     y::AbstractVector,
     g::AbstractVector;
-	offset = zeros(0),
+    offset = zeros(0),
     dofit::Bool = true,
     fitargs...,
 ) where {M<:ConditionalPoissonModel}
 
     if !(size(X, 1) == length(y) == length(g))
-		n1, n2, n3 = size(X, 1), length(y), length(g)
-		msg = @sprintf("Number of rows in X (%d), y (%d), and g (%d) must match", n1, n2, n3)
+        n1, n2, n3 = size(X, 1), length(y), length(g)
+        msg = @sprintf("Number of rows in X (%d), y (%d), and g (%d) must match", n1, n2, n3)
         throw(DimensionMismatch(msg))
     end
 
-	if (length(offset) > 0) && (length(offset) != length(y))
-		throw(DimensionMismatch("If offset is provided its length must equal the length of y."))
-	end
+    if (length(offset) > 0) && (length(offset) != length(y))
+        throw(DimensionMismatch("If offset is provided its length must equal the length of y."))
+    end
 
     y = try
         Int64.(y)
@@ -54,7 +54,7 @@ function loglike(m::ConditionalPoissonModel, params::AbstractVector)::Float64
     Xty = cm.pp.Xty
     linpred = X * params
     if length(cm.offset) > 0
-		linpred .+= cm.offset
+        linpred .+= cm.offset
     end
     exb = exp.(linpred)
     wts = cm.wts
@@ -75,7 +75,7 @@ function score(m::ConditionalPoissonModel, params::AbstractVector, scr::Abstract
     Xty = cm.pp.Xty
     linpred = X * params
     if length(cm.offset) > 0
-		linpred .+= cm.offset
+        linpred .+= cm.offset
     end
     exb = exp.(linpred)
     wts = cm.wts
@@ -95,7 +95,7 @@ function hessian(m::ConditionalPoissonModel, params::AbstractVector, hess::Abstr
     Xty = cm.pp.Xty
     linpred = X * params
     if length(cm.offset) > 0
-		linpred .+= cm.offset
+        linpred .+= cm.offset
     end
     exb = exp.(linpred)
     wts = cm.wts

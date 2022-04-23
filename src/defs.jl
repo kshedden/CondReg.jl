@@ -44,8 +44,8 @@ mutable struct DensePred{T<:Real} <: LinPred
     "`Xty`: y' times X within each group"
     Xty::Matrix{T}
 
-	"`oty`: y dotted with the offset in each group"
-	oty::Vector{T}
+    "`oty`: y dotted with the offset in each group"
+    oty::Vector{T}
 
     "`beta0`: coefficients"
     beta0::Vector{T}
@@ -88,7 +88,7 @@ function ConditionalModel(
     y::AbstractVector,
     g::AbstractVector;
     wts::AbstractVector = zeros(0),
-	offset::AbstractVector = zeros(0)
+    offset::AbstractVector = zeros(0)
 )
     g = try
         disallowmissing(g)
@@ -102,7 +102,7 @@ function ConditionalModel(
     # Sufficient statistics, y' 1 and y' X for each greoup
     p = size(X, 2)
     Xty = zeros(ngrp, p)
-	oty = length(offset) > 0 ? zeros(ngrp) : zeros(0)
+    oty = length(offset) > 0 ? zeros(ngrp) : zeros(0)
     ys = zeros(eltype(y), ngrp)
     xvar = zeros(Int, p)
     for g in 1:ngrp
@@ -113,8 +113,8 @@ function ConditionalModel(
         ys[g] = sum(y[i1:i2])
         Xty[g, :] = y[i1:i2]' * X[i1:i2, :]
         if length(offset) > 0
-	        oty[g] = dot(y[i1:i2], offset[i1:i2])
-		end
+            oty[g] = dot(y[i1:i2], offset[i1:i2])
+        end
         for j in 1:p
             xvar[j] += var(X[i1:i2, j]) > 1e-8 ? 1 : 0
         end
