@@ -111,3 +111,7 @@ function hessian(m::ConditionalPoissonModel, params::AbstractVector, hess::Abstr
         hess .-= cm.ys[g] * (denom * xx' * diagm(ee) * xx - numer * numer') ./ denom^2
     end
 end
+
+function Base.show(io::IO, m::ConditionalPoissonModel)
+    println(io, coeftable(m))
+end

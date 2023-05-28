@@ -163,3 +163,7 @@ function ds(
 
     return u, v
 end
+
+function Base.show(io::IO, m::ConditionalLogitModel)
+    println(io, coeftable(m))
+end

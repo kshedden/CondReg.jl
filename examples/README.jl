@@ -17,8 +17,11 @@ rng = StableRNG(123)
 
 n = 500 # sample size
 m = 50 # number of groups
+
+# Group labels
 id = StatsBase.sample(rng, 1:m, n, replace=true)
 sort!(id)
+
 u = 0.25*randn(rng, m) # group intercepts
 x1 = randn(rng, n) # first covariate
 x2 = randn(rng, n) # second covariate
@@ -38,6 +41,10 @@ da = DataFrame(y=y, x1=x1, x2=x2, id=id)
 ## Fit a conditional logit model
 m1 = fit(ConditionalLogitModel, @formula(y ~ x1 + x2), da, da[:, :id])
 
+## We can fit the same model without a formula.  Note that in a
+## conditional model no intercept is included in the design matrix.
+m2 = fit(ConditionalLogitModel, [x1 x2], y, da[:, :id])
+
 # Next we generate data from a Poisson model with group-specific
 # intercepts and fit a model using conditional Poisson regression.
 
@@ -47,4 +54,7 @@ y = rand.(rng, Poisson.(ev))
 da[:, :y] = y
 
 ## Fit a conditional Poisson model
-m2 = fit(ConditionalPoissonModel, @formula(y ~ x1 + x2), da, da[:, :id])
+m3 = fit(ConditionalPoissonModel, @formula(y ~ x1 + x2), da, da[:, :id])
+
+## Fit the model without a formula
+m4 = fit(ConditionalPoissonModel, [x1 x2], y, da[:, :id])
