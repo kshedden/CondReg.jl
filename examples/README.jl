@@ -1,12 +1,10 @@
-# # Overview
-
 # # CondReg.jl: Conditional regression models in Julia
 
-# # The CondReg.jl Julia package implements conditional logistic and conditional
-# # Poisson regression. These are techniques for regression analysis with grouped
-# # data, where each group has a distinct and unknown intercept.
+# The CondReg.jl Julia package implements conditional logistic and conditional
+# Poisson regression. These are techniques for regression analysis with grouped
+# data, where each group has a distinct and unknown intercept.
 
-# # Usage:
+# ## Usage:
 
 # First we generate grouped Bernoulli data with group-specific random
 # intercepts, and fit a logistic regression model using conditional
