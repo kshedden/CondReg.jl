@@ -50,5 +50,8 @@ end
 
 sig2, cf = simstudy()
 
+println("Rejection rate:")
 println(sig2)
-println(cf)
+
+println("\nBias:")
+println(cf - beta)

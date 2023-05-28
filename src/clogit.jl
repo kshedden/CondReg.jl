@@ -163,5 +163,3 @@ function ds(
 
     return u, v
 end
-
-clogit(F, D, args...; kwargs...) = fit(ConditionalLogitModel, F, D, args...; kwargs...)

@@ -108,7 +108,7 @@ function ConditionalModel(
     for g in 1:ngrp
         i1, i2 = gix[:, g]
         if var(y[i1:i2]) < 1e-8
-            @warn "The response appears to be constant in the $(i)th group."
+            error("The response appears to be constant in the group $(g).")
         end
         ys[g] = sum(y[i1:i2])
         Xty[g, :] = y[i1:i2]' * X[i1:i2, :]
@@ -124,8 +124,9 @@ function ConditionalModel(
     if length(jj) > 0
         jx = join(string.(jj), ", ")
         c = length(jj) > 1 ? "s" : ""
-        msg = @sprintf("Variable%s %s appear to be constant in all groups.", c, jx)
-        @warn(msg)
+        d = length(jj) == 1 ? "s" : ""
+        msg = @sprintf("Variable%s %s appear%s to be constant in all groups.", c, jx, d)
+        error(msg)
     end
 
     pp = DensePred(X, Xty, oty)
@@ -220,7 +221,7 @@ function coeftable(mm::ConditionalModel; level::Real = 0.95)
     )
 end
 
-function StatsBase.fit!(
+function fit!(
     m::T;
     verbose::Bool = false,
     maxiter::Integer = 50,

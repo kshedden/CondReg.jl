@@ -1,14 +1,15 @@
 module CondReg
 
 using Printf
-using StatsBase, StatsModels
+using DataFrames
+using StatsModels
+using StatsBase: CoefTable
 using GLM: LinPredModel, LinPred
-using LinearAlgebra, Optim, FiniteDifferences, Distributions, Missings
+using LinearAlgebra, Optim, FiniteDifferences, Distributions
 
-import StatsBase: coef, coeftable, vcov, stderr, fit
+import StatsAPI: coef, coeftable, vcov, stderr, fit
 
-export fit,
-    fit!, ConditionalModel, ConditionalLogitModel, ConditionalPoissonModel, clogit, cpoisson
+export fit, fit!, ConditionalModel, ConditionalLogitModel, ConditionalPoissonModel
 export loglike, hessian, score, coef, stderr, vcov, coeftable, drop_intercept
 
 include("defs.jl")

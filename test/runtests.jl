@@ -1,5 +1,11 @@
-using CondReg, Test, LinearAlgebra, StableRNGs, Distributions, DataFrames
-using StatsModels, FiniteDifferences
+using CondReg
+using Test
+using LinearAlgebra
+using StableRNGs
+using Distributions
+using DataFrames
+using StatsModels
+using FiniteDifferences
 
 function gen_simple_clogit(n::Int)
 
@@ -39,7 +45,7 @@ end
 
     # Check that there is no intercept in the model
     f = @formula(y ~ x1 + x2 + x3)
-    m = cpoisson(f, df, g)
+    m = fit(ConditionalPoissonModel, f, df, g)
     @test length(coefnames(m)) == 3
 end
 

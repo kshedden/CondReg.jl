@@ -111,5 +111,3 @@ function hessian(m::ConditionalPoissonModel, params::AbstractVector, hess::Abstr
         hess .-= cm.ys[g] * (denom * xx' * diagm(ee) * xx - numer * numer') ./ denom^2
     end
 end
-
-cpoisson(F, D, args...; kwargs...) = fit(ConditionalPoissonModel, F, D, args...; kwargs...)
