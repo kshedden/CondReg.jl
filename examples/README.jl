@@ -1,4 +1,4 @@
-# # CondReg.jl: Conditional regression models in Julia
+# # Conditional regression models in Julia
 
 # The CondReg.jl Julia package implements conditional logistic and conditional
 # Poisson regression. These are techniques for regression analysis with grouped
@@ -38,8 +38,8 @@ da = DataFrame(y=y, x1=x1, x2=x2, id=id)
 ## Fit a conditional logit model
 m1 = fit(ConditionalLogitModel, @formula(y ~ x1 + x2), da, da[:, :id])
 
-## Next we generate data from a Poisson model with group-specific
-## intercepts and fit a model using conditional Poisson regression.
+# Next we generate data from a Poisson model with group-specific
+# intercepts and fit a model using conditional Poisson regression.
 
 ## A vector of expected values
 ev = exp.(lp)
