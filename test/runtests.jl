@@ -117,6 +117,8 @@ end
     )
 
     r = fit(ConditionalLogitModel, X, y, g)
+    println(typeof(r))
+    coef(r)
     @test isapprox(
         coef(r),
         [0.9205497138848794, -0.05772870577778407, -1.0788357395092034],

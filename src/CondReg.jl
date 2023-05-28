@@ -4,8 +4,8 @@ using Printf
 using DataFrames
 using StatsModels
 using StatsBase: CoefTable
-using GLM: LinPredModel, LinPred
-using LinearAlgebra, Optim, FiniteDifferences, Distributions
+using LinearAlgebra, Optim, Distributions
+using FiniteDifferences
 
 import StatsAPI: coef, coeftable, vcov, stderr, fit
 

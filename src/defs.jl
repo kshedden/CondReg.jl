@@ -1,4 +1,6 @@
-abstract type AbstractConditionalModel <: LinPredModel end
+abstract type AbstractConditionalModel <: RegressionModel end
+
+abstract type LinPred end
 
 # Conditional models should not contain an intercept
 StatsModels.drop_intercept(::Type{<:AbstractConditionalModel}) = true
@@ -10,7 +12,7 @@ Information specifying a regression model to be fit with using the
 conditional likelihood.  This struct is intended to be embedded into
 specific conditional models such as ConditionalLogitModel.
 """
-struct ConditionalModel{S<:Integer,T<:Real} <: LinPredModel
+struct ConditionalModel{S<:Integer,T<:Real} <: AbstractConditionalModel
 
     "`y`: response vector"
     y::Vector{S}
@@ -53,6 +55,9 @@ mutable struct DensePred{T<:Real} <: LinPred
     "`cov`: sampling covariance matrix of coefficients"
     cov::Matrix{T}
 end
+
+coef(m::ConditionalModel) = m.pp.beta0
+vcov(m::ConditionalModel) = m.pp.cov
 
 function DensePred(X::Matrix{T}, Xty::Matrix{T}, oty::Vector{T}) where {T<:Real}
     p = size(X)[2]
@@ -195,10 +200,6 @@ function hessian(m, b, hess)
     end
     hess .= jacobian(central_fdm(12, 1), score1, b)[1]
     hess .= (hess + hess') ./ 2
-end
-
-function vcov(m::ConditionalModel)
-    return m.pp.cov
 end
 
 function coeftable(mm::AbstractConditionalModel; level::Real = 0.95)
